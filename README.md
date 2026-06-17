@@ -150,12 +150,11 @@ For example, the GloVe `L = 10` AMD runs are stored in `lamarckian_colab_noteboo
 ## Citation
 
 ```bibtex
-@inproceedings{docaj2027lamarck,
-  title     = {Adaptive Lamarckian Index Maintenance for Exact Metric Search over Growing Vector Data},
-  author    = {Docaj, Andris and Zhuang, Yu},
-  booktitle = {IEEE International Conference on Data Engineering (ICDE)},
-  year      = {2027},
-  note      = {Submitted}
+@misc{docaj2026adaptive,
+  title  = {Adaptive Lamarckian Index Maintenance for Exact Metric Search over Growing Vector Data},
+  author = {Docaj, Andris and Zhuang, Yu},
+  year   = {2026},
+  note   = {Submitted to ICDE 2027}
 }
 ```
 
