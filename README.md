@@ -19,7 +19,7 @@ The evaluation spans four large metric datasets chosen to cover heterogeneous di
 | Higgs    | UCI Machine Learning Repository             | 7             | High-energy physics measurements                    |
 | Hepmass  | UCI Machine Learning Repository             | 6             | High-energy physics measurements                    |
 | Sensory  | UCI Gas Sensor Array under Dynamic Mixtures | 19            | CO + methane readings concatenated; > 8.4M vectors  |
-| GloVe    | Stanford NLP                                | 25            | Pretrained word embeddings; highest-dimensional set |
+| GloVe    | Stanford NLP                                | 25            | Pretrained word embeddings                          |
 
 ## Workloads
 
@@ -95,7 +95,7 @@ glove_evoAlg_10/
 └── intelXeon/
 ```
 
-The `p1`, `p2`, and `p3` notebooks correspond to the three workload-sequence permutations. Each permutation notebook contains the executed outputs for five independent runs of the compared methods on that permutation, and its analysis cells average those five runs before computing the permutation-level speedups against the corresponding five-run averaged Exhaustive result. The `EvoAlg_Results_*` notebook then averages the three permutation-level summaries to produce the result for that dataset and sequence length. The `intelXeon/` subfolder is included only for sequence lengths `L = 10`, `L = 20`, and `L = 100`; sequence length `L = 30` does not contain an Intel Xeon subfolder.
+The `p1`, `p2`, and `p3` notebooks correspond to the three workload-sequence permutations. Each permutation notebook records five independent runs for each compared method and reports the mean runtime for that permutation. The corresponding `EvoAlg_Results_*` notebook takes the three permutation-level mean runtimes, computes the combined mean for each method, and reports the final speedups relative to the combined Exhaustive mean. The `intelXeon/` subfolder is included only for sequence lengths `L = 10`, `L = 20`, and `L = 100`; sequence length `L = 30` does not contain an Intel Xeon subfolder.
 
 ## Dataset preparation
 
