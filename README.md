@@ -1,23 +1,18 @@
 # adaptive-lamarckian-index-maintenance
 
-Code, Colab notebooks, workload sequences, dataset-preparation notebooks, and experimental logs for **Adaptive Lamarckian Index Maintenance for Exact Metric Search over Growing Vector Data**.
+Reproducibility companion to the ICDE submission **Adaptive Lamarckian Index Maintenance for Exact Metric Search over Growing Vector Data**.
 
-This repository is the reproducibility companion to the ICDE submission of the same name. The paper studies exact nearest-neighbor search over growing vector data, where insertion batches and query batches arrive over a sequence of decision rounds. After each insertion batch, the system must decide whether to insert the new vectors into the current metric index or reconstruct the index over the current dataset. The proposed policy uses an analytic cost model for rebuild and insert decisions, updates its cost-model parameters from observed runtimes, transfers updated parameters into elite population members through Lamarckian writeback, and uses a degradation-aware margin to account for query-cost growth from post-reconstruction insertions. The method remains exact: it does not change the metric, learn a new vector representation, or introduce approximate search. It changes only the index-maintenance decision and the cost-model parameters used to make that decision.
+This repository contains the experiment notebooks, dataset-preparation notebooks, workload sequences, and horizon-scaling plots used for the submitted paper. The experiment notebooks include the Lamarck policy, the implementations of the methods it is compared against, and the saved notebook outputs used to verify the reported speedup, ablation, and horizon-scaling results.
 
-## Method summary
+Lamarck is a runtime-calibrated index-maintenance policy for exact metric search over growing vector data. It predicts rebuild, insert, and query costs; updates cost-model parameters from measured runtimes; maintains a small population of candidate parameter vectors; applies Lamarckian writeback to elite candidates; and adjusts the rebuild margin when post-reconstruction insertions increase predicted query cost. The experiments instantiate the policy with dynamic VP-trees for direct comparison with VPWV and the static Log-Threshold rule.
 
-After each insertion batch the policy selects one of two actions:
+## Maintenance decision
 
-```text
-rebuild: reconstruct the metric index over the current dataset
-insert:  absorb the new batch into the current index
-```
-
-The policy is instantiated on a dynamic VP-tree and combines an analytic predictor for rebuild, insert, and query costs; online calibration of live cost-model parameters from observed runtimes; a small population of nearby candidate parameter vectors; projected Lamarckian writeback that copies the updated live parameters into elite candidates; and a degradation-aware reconstruction margin that prices the query-cost growth caused by insertions accumulated since the last rebuild. Together these track the observed runtime regime over a growing-data workload while preserving exact search.
+After each insertion batch, the policy selects one of two maintenance actions. It may *rebuild*, reconstructing the metric index over the current dataset, or *insert*, absorbing the new vectors into the existing index. Insertion defers the cost of reconstruction but allows effective node occupancy to rise, which can raise the cost of later queries, whereas reconstruction restores a well-organized index at an immediate cost that is wasted when the current index remains effective. The policy resolves this tradeoff online, calibrating its cost model from the rebuild, insert, and query times it observes and adjusting the reconstruction margin as post-reconstruction insertions accumulate.
 
 ## Datasets
 
-The experiments use four large, diverse metric datasets spanning heterogeneous dimensional regimes.
+The evaluation spans four large metric datasets chosen to cover heterogeneous dimensional regimes.
 
 | Dataset  | Source                                      | Dimension `d` | Notes                                                |
 |----------|---------------------------------------------|---------------|-----------------------------------------------------|
@@ -28,24 +23,17 @@ The experiments use four large, diverse metric datasets spanning heterogeneous d
 
 ## Workloads
 
-Experiments interleave batched insertions and query phases as ordered pairs `(b_k, q_k)` indexed by decision rounds `k`, where `b_k` is the insertion-batch size and `q_k` is the number of exact nearest-neighbor queries evaluated after the maintenance action. Following the growing-dataset protocol, batch sizes are drawn from `EB = 0`, `SB = 10,000`, `MB = 100,000`, `LB = 1,000,000`, and query loads from `EQ = 0`, `SQ = 20`, `MQ = 100`, `LQ = 500`, with tuples allowed to leave either component empty to stress insertion-only, query-only, and mixed rounds.
+Each experiment interleaves insertion and query phases as an ordered sequence of pairs `(b_k, q_k)` indexed by decision rounds `k`, where `b_k` is the size of the insertion batch applied at round `k` and `q_k` is the number of exact nearest-neighbor queries evaluated after the maintenance action. Following the growing-data protocol, the insertion sizes are drawn from `EB = 0`, `SB = 10,000`, `MB = 100,000`, and `LB = 1,000,000`, and the query loads from `EQ = 0`, `SQ = 20`, `MQ = 100`, and `LQ = 500`; either component of a pair may be empty, so the sequences exercise insertion-only, query-only, and mixed rounds.
 
-The paper reports sequence lengths `L = 10`, `L = 30`, and `L = 100`. Each length is evaluated under three independent permutations of the tuple multiset, with five independent experiments per configuration on a fixed CPU allocation and identical sampled batches and queries; the coefficient of variation of end-to-end runtime stays below 10%. The repository additionally includes `L = 20` notebooks used for supplemental horizon-scaling and hardware-verification checks.
+The paper reports sequence lengths `L = 10`, `L = 30`, and `L = 100`. Each length is evaluated under three independent permutations of the tuple multiset, with five independent experiments per configuration on a fixed CPU allocation and on the same sampled insertions and queries; the coefficient of variation of end-to-end runtime remains below 10%. The repository additionally provides `L = 20` notebooks used for supplemental horizon-scaling and hardware-verification checks.
 
-## Baselines
+## Methods compared
 
-```text
-Exhaustive       naive exact nearest-neighbor search
-VPWV             incremental VP index baseline
-Log-Threshold    static reconstruction-threshold policy
-Lamarck          adaptive Lamarckian index-maintenance policy
-```
-
-Runtimes are reported as end-to-end wall-clock measurements over the full insertion–query sequence, and speedups are taken relative to Exhaustive.
+Four methods are evaluated. Exhaustive is a naive exact nearest-neighbor search that scans all stored vectors; it serves as the reference against which every speedup in the tables is computed. VPWV is the incremental VP index. Log-Threshold is the static reconstruction-threshold policy from prior growing-data benchmarking. Lamarck is the adaptive index-maintenance policy proposed in the paper. All runtimes are end-to-end wall-clock measurements over the full insertion–query sequence, and speedups are reported relative to Exhaustive.
 
 ## Main ICDE results
 
-Lamarck consistently improves over VPWV and the static Log-Threshold rule on all four datasets. At sequence length `L = 30`, the reported average speedups relative to Exhaustive are:
+Across all four datasets, Lamarck improves consistently over both VPWV and the static Log-Threshold rule. At sequence length `L = 30`, the average speedups relative to Exhaustive are:
 
 | Dataset | Average speedup at `L = 30` |
 |---------|-----------------------------|
@@ -54,7 +42,7 @@ Lamarck consistently improves over VPWV and the static Log-Threshold rule on all
 | Sensory | 107.8x                      |
 | GloVe   | 74.2x                       |
 
-The `L = 100` ablation study shows that population adaptation, Lamarckian writeback, and the degradation-aware margin each contribute to the final runtime improvement and repeatability: removing any one of them reduces performance on every dataset.
+The `L = 100` ablation study confirms that population adaptation, Lamarckian writeback, and the degradation-aware margin each contribute to the final runtime and to repeatability: removing any one of them degrades performance on every dataset.
 
 ## Repository contents
 
@@ -62,7 +50,6 @@ The top level of the repository is organized as follows:
 
 ```text
 adaptive-lamarckian-index-maintenance/
-├── LICENSE
 ├── README.md
 ├── lamarckian_colab_notebooks.zip   # all experiment notebooks, organized by dataset
 ├── dataset_preparation.zip          # dataset preprocessing notebooks
@@ -72,7 +59,7 @@ adaptive-lamarckian-index-maintenance/
     └── xeon_delta_comparison_sequences_L20_to_L100.pdf
 ```
 
-The experiment notebooks and the dataset-preparation notebooks are distributed as zip archives to keep the landing page compact; unpack them locally before running.
+The experiment notebooks and the dataset-preparation notebooks are provided as zip archives so that the repository landing page remains compact; both should be unpacked locally before use.
 
 ### Notebook organization
 
@@ -108,11 +95,11 @@ glove_evoAlg_10/
 └── intelXeon/
 ```
 
-The `p1`, `p2`, and `p3` notebooks correspond to the three workload-sequence permutations, and the `EvoAlg_Results_*` notebook summarizes the runs for that dataset and sequence length. The `intelXeon/` subfolder is included only for sequence lengths `L = 10`, `L = 20`, and `L = 100`; sequence length `L = 30` does not contain an Intel Xeon subfolder.
+The `p1`, `p2`, and `p3` notebooks correspond to the three workload-sequence permutations. Each permutation notebook contains the executed outputs for five independent runs of the compared methods on that permutation, and its analysis cells average those five runs before computing the permutation-level speedups against the corresponding five-run averaged Exhaustive result. The `EvoAlg_Results_*` notebook then averages the three permutation-level summaries to produce the result for that dataset and sequence length. The `intelXeon/` subfolder is included only for sequence lengths `L = 10`, `L = 20`, and `L = 100`; sequence length `L = 30` does not contain an Intel Xeon subfolder.
 
-## Datasets and preparation
+## Dataset preparation
 
-The dataset-preparation notebooks in `dataset_preparation.zip` document the preprocessing used to form the vector inputs for Higgs, Hepmass, Sensory, and GloVe. Large raw datasets are not stored directly in the repository; the preparation notebooks indicate how the processed benchmark arrays were generated from the original public sources.
+The notebooks in `dataset_preparation.zip` document the preprocessing used to construct the vector inputs for Higgs, Hepmass, Sensory, and GloVe. The large raw datasets are not stored in the repository; the preparation notebooks specify how the processed benchmark arrays were derived from the original public sources.
 
 ## Supplemental hardware-verification runs
 
@@ -126,26 +113,15 @@ The submitted paper uses AMD EPYC 7B12 runs from Google Colab Pro as the main ex
 
 There is no Intel Xeon folder under `*_evoAlg_30/`. These runs provide an additional check under different hardware; they are included for verification and robustness and are not intended to replace the controlled AMD experimental protocol used in the submitted ICDE paper.
 
-The `plots/` folder collects the horizon-scaling figures that isolate the advantage of Lamarck over the strongest static rule, Log-Threshold, via the absolute time saving `Δ(L) = T_Log-Threshold(L) − T_Lamarck(L)`. The AMD figure reports a more modest horizon increase from `L = 20` to `L = 100`, and the Intel Xeon figures reproduce the comparison on different hardware from `L = 10` to `L = 100` and from `L = 20` to `L = 100`. In every case the same qualitative pattern persists: the time saving of Lamarck over Log-Threshold increases with the longer decision horizon.
+The `plots/` folder collects the horizon-scaling figures that isolate the advantage of Lamarck over the strongest static rule, Log-Threshold, through the absolute time saving `Δ(L) = T_Log-Threshold(L) − T_Lamarck(L)`. The AMD figure reports a more modest horizon increase, from `L = 20` to `L = 100`, and the Intel Xeon figures reproduce the comparison on different hardware, from `L = 10` to `L = 100` and from `L = 20` to `L = 100`. In every case the same qualitative pattern holds: the time saving of Lamarck over Log-Threshold increases with the longer decision horizon.
 
 ## Reproducibility notes
 
-Wall-clock timings depend on hardware, runtime scheduling, memory pressure, and Colab allocation, so exact seconds may vary across reruns. The main reproducibility target is the comparative pattern under matched conditions: each method is evaluated on the same dataset sample, the same workload sequence, the same insertion batches, the same query batches, and the same runtime environment. For verification, use the saved notebooks and logs before changing parameters.
+Wall-clock timings depend on hardware, runtime scheduling, memory pressure, and Colab allocation, so absolute seconds may vary across reruns. The intended reproducibility target is therefore the comparative pattern under matched conditions: each method is evaluated on the same dataset sample, the same workload sequence, the same sampled insertions and queries, and the same runtime environment. Because every notebook retains its executed cell outputs, the measurements from the original runs can be inspected directly before any parameters are changed and the experiments rerun.
 
 ## Running the notebooks
 
-The easiest way to reproduce the experiments is to unpack `lamarckian_colab_notebooks.zip`, open the corresponding Colab notebooks, and run them in order:
-
-```text
-1. Prepare or load the dataset.
-2. Select the dataset folder.
-3. Select the sequence length folder.
-4. Run the three permutation notebooks.
-5. Run the corresponding result-summary notebook.
-6. Compare Lamarck with Exhaustive, VPWV, and Log-Threshold under the same workload sequence.
-```
-
-For example, the GloVe `L = 10` AMD runs are stored in `lamarckian_colab_notebooks/Glove/glove_evoAlg_10/`, and the corresponding Intel Xeon supplemental runs, when present, are stored inside `lamarckian_colab_notebooks/Glove/glove_evoAlg_10/intelXeon/`.
+To reproduce a configuration, unpack `lamarckian_colab_notebooks.zip`, open the relevant Colab notebooks, and execute them in order: prepare or load the dataset, select the dataset folder and then the sequence-length folder, run the three permutation notebooks, and finally run the corresponding result-summary notebook.
 
 ## Citation
 
@@ -161,7 +137,3 @@ For example, the GloVe `L = 10` AMD runs are stored in `lamarckian_colab_noteboo
 ## Contact
 
 Andris Docaj, Texas Tech University — Andris.Docaj@ttu.edu
-
-## License
-
-License information will be added here.
