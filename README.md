@@ -55,7 +55,6 @@ adaptive-lamarckian-index-maintenance/
 ├── dataset_preparation.zip          # dataset preprocessing notebooks
 └── plots/                           # horizon-scaling delta-comparison figures
     ├── amd_delta_comparison_sequences_L20_to_L100.pdf
-    ├── xeon_delta_comparison_sequences_L10_to_L100.pdf
     └── xeon_delta_comparison_sequences_L20_to_L100.pdf
 ```
 
@@ -87,15 +86,15 @@ Glove/
 The same organization is used for the other datasets, with the dataset name changed accordingly. Inside each sequence folder, the notebooks store the individual permutation runs and the corresponding result-summary notebook:
 
 ```text
-glove_evoAlg_10/
-├── evo_alg_seq_10_p1_glove.ipynb
-├── evo_alg_seq_10_p2_glove.ipynb
-├── evo_alg_seq_10_p3_glove.ipynb
-├── EvoAlg_Results_Glove_10.ipynb
+glove_evoAlg_20/
+├── evo_alg_seq_20_p1_glove.ipynb
+├── evo_alg_seq_20_p2_glove.ipynb
+├── evo_alg_seq_20_p3_glove.ipynb
+├── EvoAlg_Results_Glove_20.ipynb
 └── intelXeon/
 ```
 
-The `p1`, `p2`, and `p3` notebooks correspond to the three workload-sequence permutations. Each permutation notebook records five independent runs for each compared method and reports the mean runtime for that permutation. The corresponding `EvoAlg_Results_*` notebook takes the three permutation-level mean runtimes, computes the combined mean for each method, and reports the final speedups relative to the combined Exhaustive mean. The `intelXeon/` subfolder is included only for sequence lengths `L = 10`, `L = 20`, and `L = 100`; sequence length `L = 30` does not contain an Intel Xeon subfolder.
+The `p1`, `p2`, and `p3` notebooks correspond to the three workload-sequence permutations. Each permutation notebook records five independent runs for each compared method and reports the mean runtime for that permutation. The corresponding `EvoAlg_Results_*` notebook takes the three permutation-level mean runtimes, computes the combined mean for each method, and reports the final speedups relative to the combined Exhaustive mean. The `intelXeon/` subfolder is included only for sequence lengths `L = 20` and `L = 100`; sequence lengths `L = 10` and `L = 30` do not contain Intel Xeon subfolders.
 
 ## Dataset preparation
 
@@ -106,14 +105,13 @@ The notebooks in `dataset_preparation.zip` document the preprocessing used to co
 The submitted paper uses AMD EPYC 7B12 runs from Google Colab Pro as the main experimental environment. The repository additionally includes Intel Xeon verification runs inside the relevant sequence folders of `lamarckian_colab_notebooks.zip`, under:
 
 ```text
-*_evoAlg_10/intelXeon/
 *_evoAlg_20/intelXeon/
 *_evoAlg_100/intelXeon/
 ```
 
-There is no Intel Xeon folder under `*_evoAlg_30/`. These runs provide an additional check under different hardware; they are included for verification and robustness and are not intended to replace the controlled AMD experimental protocol used in the submitted ICDE paper.
+There is no Intel Xeon folder under `*_evoAlg_10/` or `*_evoAlg_30/`. These runs provide an additional check under different hardware; they are included for verification and robustness and are not intended to replace the controlled AMD experimental protocol used in the submitted ICDE paper.
 
-The `plots/` folder collects the horizon-scaling figures that isolate the advantage of Lamarck over the strongest static rule, Log-Threshold, through the absolute time saving `Δ(L) = T_Log-Threshold(L) − T_Lamarck(L)`. The AMD figure reports a more modest horizon increase, from `L = 20` to `L = 100`, and the Intel Xeon figures reproduce the comparison on different hardware, from `L = 10` to `L = 100` and from `L = 20` to `L = 100`. In every case the same qualitative pattern holds: the time saving of Lamarck over Log-Threshold increases with the longer decision horizon.
+The `plots/` folder collects the horizon-scaling figures that isolate the advantage of Lamarck over the strongest static rule, Log-Threshold, through the absolute time saving `Δ(L) = T_Log-Threshold(L) − T_Lamarck(L)`. Both the AMD and Intel Xeon figures report the same horizon increase, from `L = 20` to `L = 100`, so the supplemental comparison is matched by sequence length and differs only in hardware. In both hardware settings, the same qualitative pattern holds: the time saving of Lamarck over Log-Threshold increases with the longer decision horizon.
 
 ## Reproducibility notes
 
